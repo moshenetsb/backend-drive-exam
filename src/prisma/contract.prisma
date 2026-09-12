@@ -1,0 +1,112 @@
+// use prisma-next
+
+model User {
+  uuid           Uuid         @id @default(uuid())
+  email          String       @unique
+  name           String?
+  surname        String?
+  password       String
+  createdAt      DateTime     @default(now())
+  updatedAt      temporal.updatedAt()
+  isActive       Boolean      @default(true)
+  role           Role         @default(USER)
+  examSessions   ExamSession[]
+  savedQuestions SavedQuestion[]
+}
+
+enum Level {
+  PODSTAWOWY
+  SPECJALISTYCZNY
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Category {
+  @@type("pg/text@1")
+  AM   = "AM"
+  A1   = "A1"
+  A2   = "A2"
+  A    = "A"
+  B1   = "B1"
+  B    = "B"
+  B_E  = "B+E"
+  C    = "C"
+  C1   = "C1"
+  C1_E = "C1+E"
+  C_E  = "C+E"
+  D    = "D"
+  D1   = "D1"
+  D1_E = "D1+E"
+  D_E  = "D+E"
+  T    = "T"
+  PT   = "PT" // tram
+}
+
+enum Answer {
+  A
+  B
+  C
+  T
+  N
+}
+
+model Question {
+  uuid           Uuid     @id @default(uuid())
+  nr             Int
+  content        String
+  answerA        String?
+  answerB        String?
+  answerC        String?
+  correctAnswer  Answer
+  media          String?
+  level          Level
+  points         Int
+  categories     CategoryAssignment[]
+  createdAt      DateTime @default(now())
+  updatedAt      temporal.updatedAt()
+  userAnswers    UserAnswer[]
+  savedQuestions SavedQuestion[]
+}
+
+model CategoryAssignment {
+  uuid         Uuid     @id @default(uuid())
+  category     Category
+  questionUuid Uuid
+  question     Question @relation(fields: [questionUuid], references: [uuid])
+}
+
+model ExamSession {
+  uuid      Uuid   @id @default(uuid())
+  userUuid  Uuid
+  user      User   @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+  category  Category
+  score     Int
+  isPassed  Boolean
+  answers   UserAnswer[]
+  createdAt DateTime @default(now())
+}
+
+model UserAnswer {
+  uuid            Uuid        @id @default(uuid())
+  examSessionUuid Uuid
+  examSession     ExamSession @relation(fields: [examSessionUuid], references: [uuid], onDelete: Cascade)
+  questionUuid    Uuid
+  question        Question    @relation(fields: [questionUuid], references: [uuid])
+  givenAnswer     Answer
+  isCorrect       Boolean
+  createdAt       DateTime    @default(now())
+}
+
+model SavedQuestion {
+  uuid         Uuid     @id @default(uuid())
+  userUuid     Uuid
+  user         User     @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+  questionUuid Uuid
+  question     Question @relation(fields: [questionUuid], references: [uuid], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([userUuid, questionUuid])
+}
