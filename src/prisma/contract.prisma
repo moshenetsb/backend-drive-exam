@@ -75,7 +75,7 @@ model CategoryAssignment {
   uuid         Uuid     @id @default(uuid())
   category     Category
   questionUuid Uuid
-  question     Question @relation(fields: [questionUuid], references: [uuid])
+  question     Question @relation(fields: [questionUuid], references: [uuid], onDelete: Cascade)
 }
 
 model ExamSession {

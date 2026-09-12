@@ -889,6 +889,7 @@
               },
               "foreignKeys": [
                 {
+                  "onDelete": "cascade",
                   "source": {
                     "columns": [
                       "questionUuid"
@@ -1455,7 +1456,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "a531b47716540fe7aba7497b1909b396efc1e7c7bf97c1955eec3d759de93a1f"
+    "storageHash": "cc2ac803525f842f8ed19550ffa1a73dd61b3d416cb96030a988e2eaa7f62bcd"
   },
   "execution": {
     "executionHash": "7a9ba1f6b123e2c0ca05fe7291e4cf657368a91f656c7c1f5f35a5c19cc99b01",

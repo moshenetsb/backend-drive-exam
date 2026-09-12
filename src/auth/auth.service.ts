@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { LoginDto } from "./dto/login.dto";
-//import { UserService } from "../user/user.service";
-//import { CreateUserDto } from "../user/dto/create-user.dto";
+import { UsersService } from "../users/users.service";
+import { CreateUserDto } from "../users/dto/create-user.dto";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import { db } from "../prisma/db";
@@ -10,16 +10,16 @@ import { db } from "../prisma/db";
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    //private readonly userService: UserService,
+    private readonly userService: UsersService,
   ) {}
 
-  //   async register(createUserDto: CreateUserDto) {
-  //     await this.userService.create(createUserDto);
-  //     return await this.login({
-  //       email: createUserDto.email,
-  //       password: createUserDto.password,
-  //     });
-  //   }
+    async register(createUserDto: CreateUserDto) {
+      await this.userService.create(createUserDto);
+      return await this.login({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
+    }
 
   async login(loginDto: LoginDto) {
     const user = await db.orm.public.User.where({

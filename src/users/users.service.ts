@@ -1,26 +1,47 @@
-import { Injectable } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { db } from "../prisma/db";
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return "This action adds a new user";
+  async create(createUserDto: CreateUserDto) {
+    const user = await db.orm.public.User.where({
+      email: createUserDto.email
+    }).first();
+
+    if (user){
+      throw new ConflictException('User with this email already exists');
+    }
+
+    return db.orm.public.User.create(createUserDto);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    return await db.orm.public.User.all();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(uuid: string) {
+    const user = await db.orm.public.User.where({ uuid }).first();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(uuid: string, updateUserDto: UpdateUserDto) {
+    await this.findOne(uuid);
+
+    return db.orm.public.User.where({ uuid }).update(updateUserDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(uuid: string) {
+    await this.findOne(uuid);
+
+    return db.orm.public.User.where({ uuid }).update({ 
+      isActive: false 
+    });
   }
 }
