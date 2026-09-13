@@ -12,6 +12,10 @@
       "model": "ExamSession",
       "namespace": "public"
     },
+    "examSessionQuestion": {
+      "model": "ExamSessionQuestion",
+      "namespace": "public"
+    },
     "question": {
       "model": "Question",
       "namespace": "public"
@@ -237,6 +241,13 @@
                   "plane": "domain"
                 }
               },
+              "completedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -245,14 +256,14 @@
                 }
               },
               "isPassed": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/bool@1",
                   "kind": "scalar"
                 }
               },
               "score": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
                   "kind": "scalar"
@@ -289,6 +300,21 @@
                   "namespace": "public"
                 }
               },
+              "questions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "uuid"
+                  ],
+                  "targetFields": [
+                    "examSessionUuid"
+                  ]
+                },
+                "to": {
+                  "model": "ExamSessionQuestion",
+                  "namespace": "public"
+                }
+              },
               "user": {
                 "cardinality": "N:1",
                 "on": {
@@ -310,6 +336,9 @@
                 "category": {
                   "column": "category"
                 },
+                "completedAt": {
+                  "column": "completedAt"
+                },
                 "createdAt": {
                   "column": "createdAt"
                 },
@@ -328,6 +357,98 @@
               },
               "namespaceId": "public",
               "table": "examSession"
+            }
+          },
+          "ExamSessionQuestion": {
+            "fields": {
+              "examSessionUuid": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "order": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "presentedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "questionUuid": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "uuid": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "examSession": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "examSessionUuid"
+                  ],
+                  "targetFields": [
+                    "uuid"
+                  ]
+                },
+                "to": {
+                  "model": "ExamSession",
+                  "namespace": "public"
+                }
+              },
+              "question": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "questionUuid"
+                  ],
+                  "targetFields": [
+                    "uuid"
+                  ]
+                },
+                "to": {
+                  "model": "Question",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "examSessionUuid": {
+                  "column": "examSessionUuid"
+                },
+                "order": {
+                  "column": "order"
+                },
+                "presentedAt": {
+                  "column": "presentedAt"
+                },
+                "questionUuid": {
+                  "column": "questionUuid"
+                },
+                "uuid": {
+                  "column": "uuid"
+                }
+              },
+              "namespaceId": "public",
+              "table": "examSessionQuestion"
             }
           },
           "Question": {
@@ -442,6 +563,21 @@
                 },
                 "to": {
                   "model": "CategoryAssignment",
+                  "namespace": "public"
+                }
+              },
+              "examSessionQuestions": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "uuid"
+                  ],
+                  "targetFields": [
+                    "questionUuid"
+                  ]
+                },
+                "to": {
+                  "model": "ExamSessionQuestion",
                   "namespace": "public"
                 }
               },
@@ -756,7 +892,7 @@
                 }
               },
               "givenAnswer": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -943,6 +1079,11 @@
                     "plane": "storage"
                   }
                 },
+                "completedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz-temporal@1",
                   "default": {
@@ -955,12 +1096,12 @@
                 "isPassed": {
                   "codecId": "pg/bool@1",
                   "nativeType": "bool",
-                  "nullable": false
+                  "nullable": true
                 },
                 "score": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
-                  "nullable": false
+                  "nullable": true
                 },
                 "userUuid": {
                   "codecId": "pg/uuid@1",
@@ -1008,6 +1149,101 @@
                 ]
               },
               "uniques": []
+            },
+            "examSessionQuestion": {
+              "columns": {
+                "examSessionUuid": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "order": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "presentedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "questionUuid": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "uuid": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "examSessionUuid"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "examSessionQuestion"
+                  },
+                  "target": {
+                    "columns": [
+                      "uuid"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "examSession"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "questionUuid"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "examSessionQuestion"
+                  },
+                  "target": {
+                    "columns": [
+                      "uuid"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "question"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "examSessionUuid"
+                  ],
+                  "name": "examSessionQuestion_examSessionUuid_idx_39147978",
+                  "prefix": "examSessionQuestion_examSessionUuid_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "questionUuid"
+                  ],
+                  "name": "examSessionQuestion_questionUuid_idx_88476262",
+                  "prefix": "examSessionQuestion_questionUuid_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "uuid"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "examSessionUuid",
+                    "questionUuid"
+                  ]
+                }
+              ]
             },
             "question": {
               "checks": [
@@ -1318,7 +1554,7 @@
                 "givenAnswer": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
-                  "nullable": false,
+                  "nullable": true,
                   "valueSet": {
                     "entityKind": "valueSet",
                     "entityName": "Answer",
@@ -1400,7 +1636,14 @@
                   "uuid"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "examSessionUuid",
+                    "questionUuid"
+                  ]
+                }
+              ]
             }
           },
           "valueSet": {
@@ -1456,10 +1699,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "cc2ac803525f842f8ed19550ffa1a73dd61b3d416cb96030a988e2eaa7f62bcd"
+    "storageHash": "703b359cbe2273ebac44a0381cb276672dba12e0a6a8e80dd7794c9fb85f1924"
   },
   "execution": {
-    "executionHash": "7a9ba1f6b123e2c0ca05fe7291e4cf657368a91f656c7c1f5f35a5c19cc99b01",
+    "executionHash": "fa513b25a43eca91ae3fce99f39126091a9d2d77609eb87bcc4761279035458e",
     "mutations": {
       "defaults": [
         {
@@ -1482,6 +1725,17 @@
             "column": "uuid",
             "namespace": "public",
             "table": "examSession"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "uuid",
+            "namespace": "public",
+            "table": "examSessionQuestion"
           }
         },
         {

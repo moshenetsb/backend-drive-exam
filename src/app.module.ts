@@ -6,6 +6,7 @@ import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
 import { QuestionsModule } from './questions/questions.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ExamSessionsModule } from './exam-sessions/exam-sessions.module';
 import Joi from "joi";
 
 @Module({
@@ -26,6 +27,7 @@ import Joi from "joi";
     UsersModule,
     QuestionsModule,
     CategoriesModule,
+    ExamSessionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

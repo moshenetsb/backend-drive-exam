@@ -69,6 +69,7 @@ model Question {
   updatedAt      temporal.updatedAt()
   userAnswers    UserAnswer[]
   savedQuestions SavedQuestion[]
+  examSessionQuestions ExamSessionQuestion[]
 }
 
 model CategoryAssignment {
@@ -83,11 +84,26 @@ model ExamSession {
   userUuid  Uuid
   user      User   @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
   category  Category
-  score     Int
-  isPassed  Boolean
+  score     Int?
+  isPassed  Boolean?
   answers   UserAnswer[]
+  questions ExamSessionQuestion[]
   createdAt DateTime @default(now())
+  completedAt DateTime?
 }
+
+model ExamSessionQuestion {
+  uuid            Uuid        @id @default(uuid())
+  examSessionUuid Uuid
+  examSession     ExamSession @relation(fields: [examSessionUuid], references: [uuid], onDelete: Cascade)
+  questionUuid    Uuid
+  question        Question    @relation(fields: [questionUuid], references: [uuid])
+  order           Int
+  presentedAt     DateTime?
+
+  @@unique([examSessionUuid, questionUuid])
+}
+
 
 model UserAnswer {
   uuid            Uuid        @id @default(uuid())
@@ -95,9 +111,11 @@ model UserAnswer {
   examSession     ExamSession @relation(fields: [examSessionUuid], references: [uuid], onDelete: Cascade)
   questionUuid    Uuid
   question        Question    @relation(fields: [questionUuid], references: [uuid])
-  givenAnswer     Answer
+  givenAnswer     Answer?
   isCorrect       Boolean
   createdAt       DateTime    @default(now())
+
+  @@unique([examSessionUuid, questionUuid])
 }
 
 model SavedQuestion {

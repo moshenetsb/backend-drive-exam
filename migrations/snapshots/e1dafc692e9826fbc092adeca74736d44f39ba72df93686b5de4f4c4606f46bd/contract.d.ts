@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'703b359cbe2273ebac44a0381cb276672dba12e0a6a8e80dd7794c9fb85f1924'>;
+  StorageHashBase<'e1dafc692e9826fbc092adeca74736d44f39ba72df93686b5de4f4c4606f46bd'>;
 export type ExecutionHash =
   ExecutionHashBase<'fa513b25a43eca91ae3fce99f39126091a9d2d77609eb87bcc4761279035458e'>;
 export type ProfileHash =
@@ -294,7 +294,6 @@ export type FieldOutputTypes = {
       readonly examSessionUuid: CodecTypes['pg/uuid@1']['output'];
       readonly questionUuid: CodecTypes['pg/uuid@1']['output'];
       readonly order: CodecTypes['pg/int4@1']['output'];
-      readonly presentedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
     };
     readonly Question: {
       readonly uuid: CodecTypes['pg/uuid@1']['output'];
@@ -392,7 +391,6 @@ export type FieldInputTypes = {
       readonly examSessionUuid: CodecTypes['pg/uuid@1']['input'];
       readonly questionUuid: CodecTypes['pg/uuid@1']['input'];
       readonly order: CodecTypes['pg/int4@1']['input'];
-      readonly presentedAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
     };
     readonly Question: {
       readonly uuid: CodecTypes['pg/uuid@1']['input'];
@@ -488,7 +486,6 @@ export type StorageColumnTypes = {
     readonly examSessionQuestion: {
       readonly examSessionUuid: CodecTypes['pg/uuid@1']['output'];
       readonly order: CodecTypes['pg/int4@1']['output'];
-      readonly presentedAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly questionUuid: CodecTypes['pg/uuid@1']['output'];
       readonly uuid: CodecTypes['pg/uuid@1']['output'];
     };
@@ -586,7 +583,6 @@ export type StorageColumnInputTypes = {
     readonly examSessionQuestion: {
       readonly examSessionUuid: CodecTypes['pg/uuid@1']['input'];
       readonly order: CodecTypes['pg/int4@1']['input'];
-      readonly presentedAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly questionUuid: CodecTypes['pg/uuid@1']['input'];
       readonly uuid: CodecTypes['pg/uuid@1']['input'];
     };
@@ -777,11 +773,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'int4';
                   readonly codecId: 'pg/int4@1';
                   readonly nullable: false;
-                };
-                readonly presentedAt: {
-                  readonly nativeType: 'timestamptz';
-                  readonly codecId: 'pg/timestamptz-temporal@1';
-                  readonly nullable: true;
                 };
               };
               primaryKey: { readonly columns: readonly ['uuid'] };
@@ -1319,13 +1310,6 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
-              readonly presentedAt: {
-                readonly nullable: true;
-                readonly type: {
-                  readonly kind: 'scalar';
-                  readonly codecId: 'pg/timestamptz-temporal@1';
-                };
-              };
             };
             readonly relations: {
               readonly examSession: {
@@ -1359,7 +1343,6 @@ type ContractBase = Omit<
                 readonly examSessionUuid: { readonly column: 'examSessionUuid' };
                 readonly questionUuid: { readonly column: 'questionUuid' };
                 readonly order: { readonly column: 'order' };
-                readonly presentedAt: { readonly column: 'presentedAt' };
               };
             };
           };
