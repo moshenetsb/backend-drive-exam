@@ -1,12 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
+import { Controller, Get } from "@nestjs/common";
+import { CategoriesService } from "./categories.service";
 
-@Controller('categories')
+@Controller("categories")
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  findAvailable(){
+  findAvailable() {
     return this.categoriesService.findAvailable();
   }
 }

@@ -1,6 +1,13 @@
-// src/question/dto/create-question.dto.ts
-import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
-import { Answer, Category, Level } from '../questions.enums';
+import {
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
+import { Answer, Category, Level } from "../questions.enums";
 
 export class CreateQuestionDto {
   @IsInt()

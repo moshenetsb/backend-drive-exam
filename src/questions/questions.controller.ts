@@ -1,9 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { QuestionsService } from './questions.service';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+} from "@nestjs/common";
+import { QuestionsService } from "./questions.service";
+import { CreateQuestionDto } from "./dto/create-question.dto";
+import { UpdateQuestionDto } from "./dto/update-question.dto";
 
-@Controller('questions')
+@Controller("questions")
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
@@ -17,18 +26,21 @@ export class QuestionsController {
     return this.questionsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.questionsService.findOne(id);
+  @Get(":uuid")
+  findOne(@Param("uuid", ParseUUIDPipe) uuid: string) {
+    return this.questionsService.findOne(uuid);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuestionDto: UpdateQuestionDto) {
-    return this.questionsService.update(id, updateQuestionDto);
+  @Patch(":uuid")
+  update(
+    @Param("uuid", ParseUUIDPipe) uuid: string,
+    @Body() updateQuestionDto: UpdateQuestionDto,
+  ) {
+    return this.questionsService.update(uuid, updateQuestionDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.questionsService.remove(id);
+  @Delete(":uuid")
+  remove(@Param("uuid", ParseUUIDPipe) uuid: string) {
+    return this.questionsService.remove(uuid);
   }
 }
