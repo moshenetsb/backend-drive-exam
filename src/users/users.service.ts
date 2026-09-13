@@ -114,6 +114,12 @@ export class UsersService {
   }
 
   async remove(uuid: string, currentUser: User) {
+    if (currentUser.uuid === uuid && isActiveAdmin(currentUser)) {
+      throw new ForbiddenException(
+        "Administrators cannot delete their own account.",
+      );
+    }
+
     if (!isActiveAdmin(currentUser) && currentUser.uuid !== uuid) {
       throw new ForbiddenException(
         "Access denied. You can only delete your own account or you need administrator privileges.",

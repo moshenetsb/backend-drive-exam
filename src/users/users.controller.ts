@@ -51,7 +51,7 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Get list of all users" })
+  @ApiOperation({ summary: "Get list of all users (Admin only)" })
   @ApiResponse({ status: 200, description: "Returns an array of users" })
   @ApiResponse({ status: 403, description: "Forbidden" })
   async findAll(@Req() req: { user: User }) {
