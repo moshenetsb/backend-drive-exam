@@ -5,8 +5,8 @@ import { db } from "../prisma/db";
 export class CategoriesService {
   async findAvailable() {
     const assignments =
-      await db.orm.public.CategoryAssignment.select("category").all();
+      await db.orm.public.CategoryAssignment.distinct("category").all();
 
-    return Array.from(new Set(assignments.map((a) => a.category)));
+    return assignments.map((a) => a.category);
   }
 }

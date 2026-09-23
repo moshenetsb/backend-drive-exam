@@ -9,6 +9,8 @@ import {
   Req,
   UseGuards,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
@@ -93,17 +95,18 @@ export class UsersController {
   }
 
   @Delete(":uuid")
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Delete user by UUID" })
   @ApiParam({ name: "uuid", description: "User UUID" })
-  @ApiResponse({ status: 200, description: "User successfully deleted" })
+  @ApiResponse({ status: 204, description: "User successfully deleted" })
   @ApiResponse({ status: 403, description: "Forbidden" })
   @ApiResponse({ status: 404, description: "User not found" })
   async remove(
     @Param("uuid", ParseUUIDPipe) uuid: string,
     @Req() req: { user: User },
   ) {
-    return await this.usersService.remove(uuid, req.user);
+    await this.usersService.remove(uuid, req.user);
   }
 }

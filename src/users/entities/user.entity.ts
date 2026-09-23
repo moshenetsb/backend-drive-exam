@@ -8,10 +8,10 @@ export class User {
   @ApiProperty()
   email!: string;
 
-  @ApiProperty({ required: false, nullable: true, example: "Jan" })
+  @ApiProperty({ nullable: true, example: "Jan" })
   name?: string | null;
 
-  @ApiProperty({ required: false, nullable: true, example: null })
+  @ApiProperty({ nullable: true, example: "Abacki" })
   surname?: string | null;
 
   @ApiProperty()

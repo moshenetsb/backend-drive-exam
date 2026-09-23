@@ -55,7 +55,7 @@ enum Answer {
 
 model Question {
   uuid           Uuid     @id @default(uuid())
-  nr             Int
+  nr             Int      @unique
   content        String
   answerA        String?
   answerB        String?

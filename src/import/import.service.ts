@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import extract from "extract-zip";
 import ffmpeg from "fluent-ffmpeg";
 import { db } from "../prisma/db";
-import { Answer, Category, Level } from "../questions/questions.enums";
+import { Answer, Category, Level } from "../questions/enums/questions.enum";
 
 const MEDIA_ZIP_URL = "https://www.gov.pl/pliki/mi/multimedia_do_pytan.zip";
 const CATALOG_URL =

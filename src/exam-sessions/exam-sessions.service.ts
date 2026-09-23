@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { CreateExamSessionDto } from "./dto/create-exam-session.dto";
 import { UpdateExamSessionDto } from "./dto/update-exam-session.dto";
-import { Category, Level, Answer } from "../questions/questions.enums";
+import { Category, Level, Answer } from "../questions/enums/questions.enum";
 import { db } from "../prisma/db";
 import { ExamSession } from "./entities/exam-session.entity";
 
