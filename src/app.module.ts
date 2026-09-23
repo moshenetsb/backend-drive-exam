@@ -7,7 +7,7 @@ import { UsersModule } from "./users/users.module";
 import { QuestionsModule } from "./questions/questions.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { ExamSessionsModule } from "./exam-sessions/exam-sessions.module";
-import { ImportModule } from './import/import.module';
+import { ImportModule } from "./import/import.module";
 import Joi from "joi";
 
 @Module({

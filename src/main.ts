@@ -5,7 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { createValidationPipe } from "./config/validation.config";
 import { createCorsOptions } from "./config/cors.config";
 import { setupSwagger } from "./config/swagger.config";
-import { Temporal } from '@js-temporal/polyfill';
+import { Temporal } from "@js-temporal/polyfill";
 
 if (!globalThis.Temporal) {
   (globalThis as any).Temporal = Temporal;
