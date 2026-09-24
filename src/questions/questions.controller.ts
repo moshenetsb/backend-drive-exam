@@ -161,4 +161,81 @@ export class QuestionsController {
   ) {
     await this.questionsService.remove(uuid, req.user);
   }
+
+  @Post(":uuid/save")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Save a question" })
+  @ApiResponse({
+    status: 201,
+    description: "Question successfully saved",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid UUID",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Question not found",
+  })
+  @ApiResponse({
+    status: 409,
+    description: "Question is already saved",
+  })
+  async saveQuestion(
+    @Param("uuid", ParseUUIDPipe) questionUuid: string,
+    @Req() req: { user: User },
+  ) {
+    return await this.questionsService.saveQuestion(req.user, questionUuid);
+  }
+
+  @Delete(":uuid/save")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Unsave a question" })
+  @ApiResponse({
+    status: 204,
+    description: "Question successfully unsaved",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid UUID",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Saved question not found",
+  })
+  async unsaveQuestion(
+    @Param("uuid", ParseUUIDPipe) questionUuid: string,
+    @Req() req: { user: User },
+  ): Promise<void> {
+    await this.questionsService.unsaveQuestion(req.user, questionUuid);
+  }
+
+  @Get("saved")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get saved questions" })
+  @ApiResponse({
+    status: 200,
+    description: "List of saved questions",
+    type: Question,
+    isArray: true,
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Unauthorized",
+  })
+  async getSavedQuestions(@Req() req: { user: User }) {
+    return await this.questionsService.getSavedQuestions(req.user);
+  }
 }

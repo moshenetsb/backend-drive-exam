@@ -151,4 +151,55 @@ export class QuestionsService {
       throw error;
     }
   }
+
+  async saveQuestion(currentUser: User, questionUuid: string) {
+    try {
+      await db.orm.public.SavedQuestion.create({
+        userUuid: currentUser.uuid,
+        questionUuid,
+      });
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new ConflictException("Question is already saved");
+      }
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        throw new NotFoundException("Question not found");
+      }
+
+      throw error;
+    }
+  }
+
+  async unsaveQuestion(currentUser: User, questionUuid: string) {
+    try {
+      await db.orm.public.SavedQuestion.where({
+        userUuid: currentUser.uuid,
+        questionUuid,
+      }).delete();
+    } catch (error) {
+      if (
+        error instanceof PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundException("Saved question not found");
+      }
+      throw error;
+    }
+  }
+
+  async getSavedQuestions(currentUser: User) {
+    const savedQuestions = await db.orm.public.SavedQuestion.where({
+      userUuid: currentUser.uuid,
+    })
+      .include("question")
+      .all();
+
+    return savedQuestions.map((savedQuestion) => savedQuestion.question);
+  }
 }
