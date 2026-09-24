@@ -7,10 +7,6 @@ import { UsersModule } from "./users/users.module";
 import { QuestionsModule } from "./questions/questions.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { ExamSessionsModule } from "./exam-sessions/exam-sessions.module";
-<<<<<<< Updated upstream
-import { ImportModule } from "./import/import.module";
-=======
->>>>>>> Stashed changes
 import Joi from "joi";
 
 @Module({
