@@ -8,7 +8,7 @@ import { pipeline } from "stream/promises";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import * as XLSX from "xlsx";
 import extract from "extract-zip";
-import * as ffmpegPath from "@ffmpeg-installer/ffmpeg";
+import ffmpegPath from "@ffmpeg-installer/ffmpeg";
 import ffmpeg from "fluent-ffmpeg";
 import cliProgress from "cli-progress";
 import { db } from "../src/prisma/db";
@@ -75,7 +75,7 @@ async function downloadFile(url: string, destination: string): Promise<void> {
   let downloaded = 0;
 
   const progress = new Transform({
-    transform(chunk, encoding, callback) {
+    transform(chunk: Buffer, encoding, callback) {
       downloaded += chunk.length;
       bar.update(downloaded);
       callback(null, chunk);
@@ -207,48 +207,50 @@ async function main(): Promise<void> {
     }
 
     try {
-      const level = normalizeLevel(row["Zakres struktury"]);
-      const points = Number(row["Liczba punktów"]);
-      const correctAnswer = row["Poprawna odp"].trim() as Answer;
+      await db.transaction(async (tx) => {
+        const level = normalizeLevel(row["Zakres struktury"]);
+        const points = Number(row["Liczba punktów"]);
+        const correctAnswer = row["Poprawna odp"].trim() as Answer;
 
-      const question = await db.orm.public.Question.create({
-        nr,
-        content: row.Pytanie.trim(),
-        answerA: row["Odpowiedź A"] || null,
-        answerB: row["Odpowiedź B"] || null,
-        answerC: row["Odpowiedź C"] || null,
-        correctAnswer,
-        level,
-        points,
-        media: null,
-      });
+        const question = await tx.orm.public.Question.create({
+          nr,
+          content: row.Pytanie.trim(),
+          answerA: row["Odpowiedź A"] || null,
+          answerB: row["Odpowiedź B"] || null,
+          answerC: row["Odpowiedź C"] || null,
+          correctAnswer,
+          level,
+          points,
+          media: null,
+        });
 
-      const mediaFilename = row.Media.trim();
-      if (mediaFilename) {
-        const mediaUrl = await processMedia(
-          mediaFilename,
-          mediaIndex,
-          question.uuid,
-        );
-        if (mediaUrl) {
-          await db.orm.public.Question.where({ uuid: question.uuid }).update({
-            media: mediaUrl,
-          });
+        const mediaFilename = row.Media.trim();
+        if (mediaFilename) {
+          const mediaUrl = await processMedia(
+            mediaFilename,
+            mediaIndex,
+            question.uuid,
+          );
+          if (mediaUrl) {
+            await tx.orm.public.Question.where({ uuid: question.uuid }).update({
+              media: mediaUrl,
+            });
+          }
         }
-      }
 
-      const categories = row.Kategorie.split(",")
-        .map((c) => c.trim())
-        .filter(Boolean) as Category[];
+        const categories = row.Kategorie.split(",")
+          .map((c) => c.trim())
+          .filter(Boolean) as Category[];
 
-      if (categories.length) {
-        await db.orm.public.CategoryAssignment.createAll(
-          categories.map((category) => ({
-            questionUuid: question.uuid,
-            category,
-          })),
-        );
-      }
+        if (categories.length) {
+          await tx.orm.public.CategoryAssignment.createAll(
+            categories.map((category) => ({
+              questionUuid: question.uuid,
+              category,
+            })),
+          );
+        }
+      });
 
       imported++;
       if (imported % 100 === 0) {
