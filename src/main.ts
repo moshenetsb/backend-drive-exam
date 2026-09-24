@@ -8,7 +8,7 @@ import { setupSwagger } from "./config/swagger.config";
 import { Temporal } from "@js-temporal/polyfill";
 
 if (!globalThis.Temporal) {
-  (globalThis as any).Temporal = Temporal;
+  globalThis.Temporal = Temporal;
 }
 
 async function bootstrap() {

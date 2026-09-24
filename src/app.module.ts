@@ -22,7 +22,7 @@ import Joi from "joi";
         JWT_EXPIRES_IN: Joi.string().default("60m"),
 
         CATALOG_URL: Joi.string().uri().required(),
-        MEDIA_ZIP_URL: Joi.string().uri().required()
+        MEDIA_ZIP_URL: Joi.string().uri().required(),
       }),
       isGlobal: true,
     }),

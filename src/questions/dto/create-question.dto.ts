@@ -88,7 +88,7 @@ export class CreateQuestionDto {
 
   @ApiProperty({
     description: "Driving licence categories for which the question applies",
-    enum: Answer,
+    enum: Category,
     isArray: true,
     example: [Category.C],
   })
