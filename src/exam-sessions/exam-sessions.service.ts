@@ -1,18 +1,17 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { CreateExamSessionDto } from "./dto/create-exam-session.dto";
-import { UpdateExamSessionDto } from "./dto/update-exam-session.dto";
 import { Category, Level, Answer } from "../questions/enums/questions.enum";
 import { db } from "../prisma/db";
-import { ExamSession } from "./entities/exam-session.entity";
+import { FindExamSessionsDto } from "./dto/find-exam-sessions.dto";
 
 const PLAN = [
   { level: Level.PODSTAWOWY, points: 3, count: 10 },
-  { level: Level.PODSTAWOWY, points: 3, count: 6 },
-  { level: Level.PODSTAWOWY, points: 3, count: 4 },
+  { level: Level.PODSTAWOWY, points: 2, count: 6 },
+  { level: Level.PODSTAWOWY, points: 1, count: 4 },
   { level: Level.SPECJALISTYCZNY, points: 3, count: 6 },
   { level: Level.SPECJALISTYCZNY, points: 2, count: 4 },
   { level: Level.SPECJALISTYCZNY, points: 1, count: 2 },
@@ -69,7 +68,8 @@ export class ExamSessionsService {
       selectedQuestions.push(...shuffle(matching).slice(0, bucket.count));
     }
 
-    const session = await db.orm.public.ExamSession.create({
+    return db.transaction(async (tx) => {
+      const session = await db.orm.public.ExamSession.create({
       userUuid,
       category,
     });
@@ -82,11 +82,12 @@ export class ExamSessionsService {
       })),
     );
 
-    return session;
+      return session;
+    });
   }
 
-  async getCurrentQuestion(examSessionUuid: string) {
-    await this.assertSessionActive(examSessionUuid);
+  async getCurrentQuestion(examSessionUuid: string, userUuid: string) {
+    await this.assertSessionActive(examSessionUuid, userUuid);
     await this.handleExpiredQuestions(examSessionUuid);
     await this.maybeFinalizeSession(examSessionUuid);
 
@@ -130,10 +131,11 @@ export class ExamSessionsService {
 
   async addAnswer(
     examSessionUuid: string,
+    userUuid: string,
     questionUuid: string,
     givenAnswer: Answer,
   ) {
-    await this.assertSessionActive(examSessionUuid);
+    await this.assertSessionActive(examSessionUuid, userUuid);
 
     const link = await db.orm.public.ExamSessionQuestion.where({
       examSessionUuid,
@@ -169,30 +171,91 @@ export class ExamSessionsService {
     return { isCorrect };
   }
 
-  findAll() {
-    return `This action returns all examSessions`;
-  }
+  async findAllForUser(userUuid: string, query: FindExamSessionsDto) {
+      const where: { userUuid: string; category?: Category; isPassed?: boolean } = {
+      userUuid,
+    };
 
-  findOne(id: number) {
-    return `This action returns a #${id} examSession`;
-  }
+    if (query.category) where.category = query.category;
+    if (query.isPassed !== undefined) where.isPassed = query.isPassed;
 
-  update(id: number, updateExamSessionDto: UpdateExamSessionDto) {
-    return `This action updates a #${id} examSession`;
-  }
+    let sessions = await db.orm.public.ExamSession.where(where).all();
 
-  remove(id: number) {
-    return `This action removes a #${id} examSession`;
-  }
-
-  private async assertSessionActive(examSessionUuid: string) {
-    const session = await db.orm.public.ExamSession.where({
-      uuid: examSessionUuid,
-    }).first();
-
-    if (!session) {
-      throw new NotFoundException("Exam session not found");
+    if (query.completed !== undefined) {
+      sessions = sessions.filter((s) =>
+        query.completed ? s.completedAt !== null : s.completedAt === null,
+      );
     }
+
+    sessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const start = (page - 1) * limit;
+    const paginated = sessions.slice(start, start + limit);
+
+    return {
+      data: paginated,
+      meta: {
+        total: sessions.length,
+        page,
+        limit,
+        totalPages: Math.ceil(sessions.length / limit),
+      },
+    };
+  }
+
+  async findOne(examSessionUuid: string, userUuid: string) {
+    const session = await this.assertOwnership(examSessionUuid, userUuid);
+
+    const links = await db.orm.public.ExamSessionQuestion.where({
+      examSessionUuid
+    }).all();
+
+    const answers = await db.orm.public.UserAnswer.where({
+      examSessionUuid
+    }).all();
+
+    const answerByQuestion = new Map(
+      answers.map((a) => [a.questionUuid, a])
+    );
+
+    const questions = await Promise.all(
+      links
+        .sort((a,b) => a.order - b.order)
+        .map(async (link) => {
+
+          const question = await db.orm.public.Question.where({
+            uuid: link.questionUuid
+          }).first();
+
+          const answer = answerByQuestion.get(link.questionUuid);
+
+          return {
+            uuid: question!.uuid,
+            content: question!.content,
+            correctAnswer: session.completedAt
+              ? question!.correctAnswer
+              : undefined,
+            givenAnswer: answer?.givenAnswer ?? null,
+            isCorrect: answer?.isCorrect ?? null,
+          }
+        })
+    )
+
+    return { ...session, questions };
+  }
+
+  async remove(examSessionUuid: string, userUuid: string) {
+    await this.assertOwnership(examSessionUuid, userUuid);
+
+    return db.orm.public.ExamSession.where({ 
+      uuid: examSessionUuid 
+    }).delete();
+  }
+
+  private async assertSessionActive(examSessionUuid: string, userUuid: string) {
+    const session = await this.assertOwnership(examSessionUuid, userUuid);
 
     if (session.completedAt) {
       throw new BadRequestException("Exam session already completed");
@@ -204,6 +267,21 @@ export class ExamSessionsService {
     if (elapsedMinutes > SESSION_LIMIT_MINUTES) {
       await this.maybeFinalizeSession(examSessionUuid);
       throw new BadRequestException("Session time limit exceeded");
+    }
+
+    return session;
+  }
+
+  private async assertOwnership(examSessionUuid: string, userUuid: string) {
+    const session = await db.orm.public.ExamSession.where({
+      uuid: examSessionUuid,
+    }).first();
+
+    if (!session) {
+      throw new NotFoundException("Exam session not found");
+    }
+    if (session.userUuid !== userUuid) {
+      throw new ForbiddenException("This exam session does not belong to you");
     }
 
     return session;
