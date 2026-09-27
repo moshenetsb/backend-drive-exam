@@ -24,6 +24,9 @@ import {
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { User } from "../users/entities/user.entity";
 import { Question } from "./entities/question.entity";
+import { Roles } from "../auth/decorators/roles.decorator";
+import { RolesGuard } from "../auth/guards/roles.guard";
+import { Role } from "../auth/enums/auth.enum";
 
 @ApiTags("Questions")
 @Controller("questions")
@@ -31,7 +34,8 @@ export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Create a new question (Admin only)" })
   @ApiResponse({
@@ -95,7 +99,8 @@ export class QuestionsController {
   }
 
   @Patch(":uuid")
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update a question (Admin only)" })
   @ApiResponse({
@@ -132,7 +137,8 @@ export class QuestionsController {
 
   @Delete(":uuid")
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Delete a question (Admin only)" })
   @ApiResponse({

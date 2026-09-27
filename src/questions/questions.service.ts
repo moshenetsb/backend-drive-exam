@@ -11,6 +11,7 @@ import { User } from "../users/entities/user.entity";
 import { isActiveAdmin } from "../utils";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
+
 @Injectable()
 export class QuestionsService {
   async create(createQuestionDto: CreateQuestionDto, currentUser: User) {

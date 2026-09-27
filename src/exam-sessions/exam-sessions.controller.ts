@@ -43,7 +43,7 @@ export class ExamSessionsController {
     status: 401,
     description: "Unauthorized",
   })
-  create(@Body() dto: CreateExamSessionDto, @Req() req: { user: User }) {
+  async create(@Body() dto: CreateExamSessionDto, @Req() req: { user: User }) {
     return this.examSessionsService.create(req.user.uuid, dto.category);
   }
 
@@ -59,7 +59,7 @@ export class ExamSessionsController {
     status: 401,
     description: "Unauthorized",
   })
-  findAll(
+  async findAll(
     @Query() query: FindExamSessionsDto, 
     @Req() req: { user: User }){
     return this.examSessionsService.findAllForUser(req.user.uuid, query);
@@ -88,7 +88,7 @@ export class ExamSessionsController {
     status: 404,
     description: "Exam session not found",
   })
-  findOne(
+  async findOne(
   @Param("uuid", ParseUUIDPipe) uuid: string, 
   @Req() req: {user: User}
 ) {
@@ -117,7 +117,7 @@ export class ExamSessionsController {
     status: 404,
     description: "Exam session not found",
   })
-  getCurrentQuestion(
+  async getCurrentQuestion(
     @Param("uuid", ParseUUIDPipe) uuid: string,
     @Req() req: { user: User }
   ) {
@@ -147,7 +147,7 @@ export class ExamSessionsController {
     status: 404,
     description: "Exam session not found",
   })
-  addAnswer(
+  async addAnswer(
     @Param("uuid", ParseUUIDPipe) uuid: string,
     @Req() req: { user: User },
     @Body() dto: CreateUserAnswerDto,
