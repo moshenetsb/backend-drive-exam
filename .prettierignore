@@ -1,3 +1,4 @@
 src/prisma/*
 !src/prisma/contract.prisma
+!src/prisma/seed.ts
 migrations/*
