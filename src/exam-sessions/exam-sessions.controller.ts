@@ -25,6 +25,7 @@ import {
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
+import { ApiPaginatedResponse } from "../pagination.dto";
 
 @ApiTags("Exam Sessions")
 @ApiBearerAuth()
@@ -57,9 +58,8 @@ export class ExamSessionsController {
   @ApiResponse({
     status: 200,
     description: "Paginated list of exam sessions",
-    type: ExamSession,
-    isArray: true,
   })
+  @ApiPaginatedResponse(ExamSession)
   @ApiResponse({
     status: 401,
     description: "Unauthorized",
