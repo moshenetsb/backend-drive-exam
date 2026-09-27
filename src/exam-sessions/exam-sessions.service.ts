@@ -69,12 +69,12 @@ export class ExamSessionsService {
     }
 
     return db.transaction(async (tx) => {
-      const session = await db.orm.public.ExamSession.create({
+      const session = await tx.orm.public.ExamSession.create({
         userUuid,
         category,
       });
 
-      await db.orm.public.ExamSessionQuestion.createAll(
+      await tx.orm.public.ExamSessionQuestion.createAll(
         selectedQuestions.map((q, index) => ({
           examSessionUuid: session.uuid,
           questionUuid: q.uuid,
