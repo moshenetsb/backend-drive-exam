@@ -28,11 +28,10 @@ Baza danych została zaprojektowana z myślą o elastyczności i wydajności:
 
 ### 1. Wymagania wstępne
 
-Upewnij się, że masz zainstalowane:
 
 - Node.js
 - Menadżer pakietów (npm)
-- Dostęp do bazy danych PostgreSQL
+- PostgreSQL
 
 ### 2. Klonowanie i instalacja zależności
 
@@ -58,7 +57,7 @@ JWT_EXPIRES_IN="60m"
 CATALOG_URL=https://www.gov.pl/attachment/a5c6c329-28a5-4274-a1a8-e2813f0a51bd
 MEDIA_ZIP_URL=https://www.gov.pl/pliki/mi/multimedia_do_pytan.zip
 
-DOWNLOAD_IMPORT_FILES=false
+DOWNLOAD_IMPORT_FILES=true
 ```
 
 ### 4. Migracja bazy danych
@@ -69,15 +68,23 @@ Zainicjalizuj schemat bazy za pomocą Prisma:
 npx prisma db init
 ```
 
-### 5. Uruchomienie trybu deweloperskiego
+### 5. Wstępne przygotowanie
 
-Aby automatycznie dodać do bazy danych oficjalną lub przygotowaną bazę pytań, uruchom przygotowany skrypt:
+Wyczyść bazę danych i dodaj konto administratora:
+
+```bash
+npm run db:seed
+```
+
+### 6. Dodanie pytań
+
+Dodaj najnowszą pulę pytań na prawo jazdy do bazy danych:
 
 ```bash
 npm run import
 ```
 
-### 6. Uruchomienie trybu deweloperskiego
+### 7. Uruchomienie trybu deweloperskiego
 
 ```bash
 npm run start:dev
