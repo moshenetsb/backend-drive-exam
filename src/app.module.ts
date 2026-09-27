@@ -7,8 +7,8 @@ import { UsersModule } from "./users/users.module";
 import { QuestionsModule } from "./questions/questions.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { ExamSessionsModule } from "./exam-sessions/exam-sessions.module";
-import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 import Joi from "joi";
 
 @Module({
@@ -22,15 +22,12 @@ import Joi from "joi";
 
         JWT_SECRET: Joi.string().required(),
         JWT_EXPIRES_IN: Joi.string().default("60m"),
-
-        CATALOG_URL: Joi.string().uri().required(),
-        MEDIA_ZIP_URL: Joi.string().uri().required(),
       }),
       isGlobal: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'media'),
-      serveRoot: '/media',
+      rootPath: join(process.cwd(), "media"),
+      serveRoot: "/media",
     }),
     AuthModule,
     UsersModule,

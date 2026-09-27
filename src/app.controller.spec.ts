@@ -18,10 +18,7 @@ describe("AppController", () => {
     it("should return the application status", () => {
       const status = appController.getStatus();
 
-      expect(status.status).toBe("ok");
-      expect(status.timestamp).toMatch(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-      );
+      expect(status).toEqual({ status: "ok" });
     });
   });
 });

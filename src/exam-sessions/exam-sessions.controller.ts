@@ -19,7 +19,12 @@ import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { User } from "../users/entities/user.entity";
 import { ExamSession } from "./entities/exam-session.entity";
 import { FindExamSessionsDto } from "./dto/find-exam-sessions.dto";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 
 @ApiTags("Exam Sessions")
 @ApiBearerAuth()
@@ -60,8 +65,9 @@ export class ExamSessionsController {
     description: "Unauthorized",
   })
   async findAll(
-    @Query() query: FindExamSessionsDto, 
-    @Req() req: { user: User }){
+    @Query() query: FindExamSessionsDto,
+    @Req() req: { user: User },
+  ) {
     return this.examSessionsService.findAllForUser(req.user.uuid, query);
   }
 
@@ -89,9 +95,9 @@ export class ExamSessionsController {
     description: "Exam session not found",
   })
   async findOne(
-  @Param("uuid", ParseUUIDPipe) uuid: string, 
-  @Req() req: {user: User}
-) {
+    @Param("uuid", ParseUUIDPipe) uuid: string,
+    @Req() req: { user: User },
+  ) {
     return this.examSessionsService.findOne(uuid, req.user.uuid);
   }
 
@@ -103,7 +109,8 @@ export class ExamSessionsController {
   })
   @ApiResponse({
     status: 400,
-    description: "Invalid UUID, session already completed, or time limit exceeded",
+    description:
+      "Invalid UUID, session already completed, or time limit exceeded",
   })
   @ApiResponse({
     status: 401,
@@ -119,7 +126,7 @@ export class ExamSessionsController {
   })
   async getCurrentQuestion(
     @Param("uuid", ParseUUIDPipe) uuid: string,
-    @Req() req: { user: User }
+    @Req() req: { user: User },
   ) {
     return this.examSessionsService.getCurrentQuestion(uuid, req.user.uuid);
   }
@@ -184,8 +191,8 @@ export class ExamSessionsController {
     description: "Exam session not found",
   })
   async remove(
-    @Param("uuid", ParseUUIDPipe) uuid: string, 
-    @Req() req: { user: User }
+    @Param("uuid", ParseUUIDPipe) uuid: string,
+    @Req() req: { user: User },
   ) {
     await this.examSessionsService.remove(uuid, req.user.uuid);
   }

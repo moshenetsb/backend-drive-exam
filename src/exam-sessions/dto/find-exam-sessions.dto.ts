@@ -1,6 +1,6 @@
-import { Type } from 'class-transformer';
-import { IsOptional, IsEnum, IsBoolean, IsInt, Min } from 'class-validator';
-import { Category } from '../../questions/enums/questions.enum';
+import { Type } from "class-transformer";
+import { IsOptional, IsEnum, IsBoolean, IsInt, Min } from "class-validator";
+import { Category } from "../../questions/enums/questions.enum";
 
 export class FindExamSessionsDto {
   @IsOptional()

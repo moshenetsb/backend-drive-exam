@@ -70,17 +70,17 @@ export class ExamSessionsService {
 
     return db.transaction(async (tx) => {
       const session = await db.orm.public.ExamSession.create({
-      userUuid,
-      category,
-    });
+        userUuid,
+        category,
+      });
 
-    await db.orm.public.ExamSessionQuestion.createAll(
-      selectedQuestions.map((q, index) => ({
-        examSessionUuid: session.uuid,
-        questionUuid: q.uuid,
-        order: index,
-      })),
-    );
+      await db.orm.public.ExamSessionQuestion.createAll(
+        selectedQuestions.map((q, index) => ({
+          examSessionUuid: session.uuid,
+          questionUuid: q.uuid,
+          order: index,
+        })),
+      );
 
       return session;
     });
@@ -172,9 +172,10 @@ export class ExamSessionsService {
   }
 
   async findAllForUser(userUuid: string, query: FindExamSessionsDto) {
-      const where: { userUuid: string; category?: Category; isPassed?: boolean } = {
-      userUuid,
-    };
+    const where: { userUuid: string; category?: Category; isPassed?: boolean } =
+      {
+        userUuid,
+      };
 
     if (query.category) where.category = query.category;
     if (query.isPassed !== undefined) where.isPassed = query.isPassed;
@@ -209,24 +210,21 @@ export class ExamSessionsService {
     const session = await this.assertOwnership(examSessionUuid, userUuid);
 
     const links = await db.orm.public.ExamSessionQuestion.where({
-      examSessionUuid
+      examSessionUuid,
     }).all();
 
     const answers = await db.orm.public.UserAnswer.where({
-      examSessionUuid
+      examSessionUuid,
     }).all();
 
-    const answerByQuestion = new Map(
-      answers.map((a) => [a.questionUuid, a])
-    );
+    const answerByQuestion = new Map(answers.map((a) => [a.questionUuid, a]));
 
     const questions = await Promise.all(
       links
-        .sort((a,b) => a.order - b.order)
+        .sort((a, b) => a.order - b.order)
         .map(async (link) => {
-
           const question = await db.orm.public.Question.where({
-            uuid: link.questionUuid
+            uuid: link.questionUuid,
           }).first();
 
           const answer = answerByQuestion.get(link.questionUuid);
@@ -239,9 +237,9 @@ export class ExamSessionsService {
               : undefined,
             givenAnswer: answer?.givenAnswer ?? null,
             isCorrect: answer?.isCorrect ?? null,
-          }
-        })
-    )
+          };
+        }),
+    );
 
     return { ...session, questions };
   }
@@ -249,8 +247,8 @@ export class ExamSessionsService {
   async remove(examSessionUuid: string, userUuid: string) {
     await this.assertOwnership(examSessionUuid, userUuid);
 
-    return db.orm.public.ExamSession.where({ 
-      uuid: examSessionUuid 
+    return db.orm.public.ExamSession.where({
+      uuid: examSessionUuid,
     }).delete();
   }
 
