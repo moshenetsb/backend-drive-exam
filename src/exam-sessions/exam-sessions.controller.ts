@@ -76,7 +76,6 @@ export class ExamSessionsController {
   @ApiResponse({
     status: 200,
     description: "Exam session successfully retrieved",
-    type: ExamSession,
   })
   @ApiResponse({
     status: 400,

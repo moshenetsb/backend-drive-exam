@@ -43,15 +43,15 @@ export class ExamSessionsService {
       uuid: string;
     }[] = [];
 
+    const assignments = await db.orm.public.CategoryAssignment.where({
+      category,
+    })
+      .select("questionUuid")
+      .all();
+
+    const candidateUuids = assignments.map((a) => a.questionUuid);
+
     for (const bucket of PLAN) {
-      const assignments = await db.orm.public.CategoryAssignment.where({
-        category,
-      })
-        .select("questionUuid")
-        .all();
-
-      const candidateUuids = assignments.map((a) => a.questionUuid);
-
       const candidates = await db.orm.public.Question.where({
         level: bucket.level,
         points: bucket.points,
@@ -91,41 +91,55 @@ export class ExamSessionsService {
     await this.handleExpiredQuestions(examSessionUuid);
     await this.maybeFinalizeSession(examSessionUuid);
 
-    const allQuestions = await db.orm.public.ExamSessionQuestion.where({
-      examSessionUuid,
-    }).all();
-
-    const answered = await db.orm.public.UserAnswer.where({
-      examSessionUuid,
-    }).all();
+    const [allQuestions, answered] = await Promise.all([
+      db.orm.public.ExamSessionQuestion.where({
+        examSessionUuid,
+      })
+        .orderBy((q) => q.order.asc())
+        .all(),
+      db.orm.public.UserAnswer.where({
+        examSessionUuid,
+      }).all(),
+    ]);
 
     const answeredUuids = new Set(answered.map((a) => a.questionUuid));
 
-    const next = allQuestions
-      .sort((a, b) => a.order - b.order)
-      .find((q) => !answeredUuids.has(q.questionUuid));
+    const next = allQuestions.find((q) => !answeredUuids.has(q.questionUuid));
 
     if (!next) {
       return { completed: true };
     }
 
-    if (!next.presentedAt) {
+    const currentPresentedAt = next.presentedAt as Date | null | undefined;
+    let presentedAt: Date;
+
+    if (currentPresentedAt) {
+      presentedAt = currentPresentedAt;
+    } else {
+      presentedAt = new Date();
+
       await db.orm.public.ExamSessionQuestion.where({
         uuid: next.uuid,
       }).update({
-        presentedAt: new Date(),
+        presentedAt,
       });
     }
 
     const question = await db.orm.public.Question.where({
       uuid: next.questionUuid,
     }).first();
-    const { correctAnswer, ...safeQuestion } = question!;
+
+    if (!question) {
+      throw new NotFoundException("Next question not found");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { correctAnswer, ...safeQuestion } = question;
 
     return {
       ...safeQuestion,
-      timeLimitSeconds: TIME_LIMITS_SECONDS[question!.level],
-      presentedAt: next.presentedAt ?? new Date(),
+      timeLimitSeconds: TIME_LIMITS_SECONDS[question.level],
+      presentedAt,
     };
   }
 
@@ -150,14 +164,18 @@ export class ExamSessionsService {
       uuid: questionUuid,
     }).first();
 
-    const limit = TIME_LIMITS_SECONDS[question!.level];
+    if (!question) {
+      throw new NotFoundException("Question not found");
+    }
+
+    const limit = TIME_LIMITS_SECONDS[question.level];
     const elapsedSeconds = (Date.now() - link.presentedAt.getTime()) / 1000;
 
     if (elapsedSeconds > limit) {
       throw new BadRequestException("Time limit for this question exceeded");
     }
 
-    const isCorrect = question!.correctAnswer === givenAnswer;
+    const isCorrect = question.correctAnswer === givenAnswer;
 
     await db.orm.public.UserAnswer.create({
       examSessionUuid,
@@ -172,36 +190,38 @@ export class ExamSessionsService {
   }
 
   async findAllForUser(userUuid: string, query: FindExamSessionsDto) {
-    const where: { userUuid: string; category?: Category; isPassed?: boolean } =
-      {
-        userUuid,
-      };
-
-    if (query.category) where.category = query.category;
-    if (query.isPassed !== undefined) where.isPassed = query.isPassed;
-
-    let sessions = await db.orm.public.ExamSession.where(where).all();
-
-    if (query.completed !== undefined) {
-      sessions = sessions.filter((s) =>
-        query.completed ? s.completedAt !== null : s.completedAt === null,
-      );
-    }
-
-    sessions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const where = {
+      userUuid,
+      ...(query.category !== undefined && {
+        category: query.category,
+      }),
+      ...(query.isPassed !== undefined && {
+        isPassed: query.isPassed,
+      }),
+      ...(query.completed !== undefined && {
+        completedAt: query.completed ? { not: null } : null,
+      }),
+    };
 
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const start = (page - 1) * limit;
-    const paginated = sessions.slice(start, start + limit);
+
+    const sessions = await db.orm.public.ExamSession.where(where)
+      .orderBy((session) => session.createdAt.desc())
+      .offset(start)
+      .limit(limit)
+      .all();
+
+    const total = db.orm.public.ExamSession.where(where).count();
 
     return {
-      data: paginated,
+      data: sessions,
       meta: {
         total: sessions.length,
         page,
         limit,
-        totalPages: Math.ceil(sessions.length / limit),
+        totalPages: Math.ceil(Number(total) / limit),
       },
     };
   }
@@ -209,37 +229,36 @@ export class ExamSessionsService {
   async findOne(examSessionUuid: string, userUuid: string) {
     const session = await this.assertOwnership(examSessionUuid, userUuid);
 
-    const links = await db.orm.public.ExamSessionQuestion.where({
-      examSessionUuid,
-    }).all();
-
-    const answers = await db.orm.public.UserAnswer.where({
-      examSessionUuid,
-    }).all();
+    const [links, answers] = await Promise.all([
+      db.orm.public.ExamSessionQuestion.where({
+        examSessionUuid,
+      })
+        .include("question")
+        .all(),
+      db.orm.public.UserAnswer.where({
+        examSessionUuid,
+      }).all(),
+    ]);
 
     const answerByQuestion = new Map(answers.map((a) => [a.questionUuid, a]));
 
-    const questions = await Promise.all(
-      links
-        .sort((a, b) => a.order - b.order)
-        .map(async (link) => {
-          const question = await db.orm.public.Question.where({
-            uuid: link.questionUuid,
-          }).first();
+    const questions = links
+      .sort((a, b) => a.order - b.order)
+      .map((link) => {
+        const question = link.question;
 
-          const answer = answerByQuestion.get(link.questionUuid);
+        const answer = answerByQuestion.get(link.questionUuid);
 
-          return {
-            uuid: question!.uuid,
-            content: question!.content,
-            correctAnswer: session.completedAt
-              ? question!.correctAnswer
-              : undefined,
-            givenAnswer: answer?.givenAnswer ?? null,
-            isCorrect: answer?.isCorrect ?? null,
-          };
-        }),
-    );
+        return {
+          uuid: question.uuid,
+          content: question.content,
+          correctAnswer: session.completedAt
+            ? question.correctAnswer
+            : undefined,
+          givenAnswer: answer?.givenAnswer ?? null,
+          isCorrect: answer?.isCorrect ?? null,
+        };
+      });
 
     return { ...session, questions };
   }
@@ -288,7 +307,9 @@ export class ExamSessionsService {
   private async maybeFinalizeSession(examSessionUuid: string) {
     const totalQuestions = await db.orm.public.ExamSessionQuestion.where({
       examSessionUuid,
-    }).all();
+    })
+      .include("question")
+      .all();
 
     const givenAnswers = await db.orm.public.UserAnswer.where({
       examSessionUuid,
@@ -296,8 +317,9 @@ export class ExamSessionsService {
 
     if (givenAnswers.length < totalQuestions.length) return;
 
-    const questions = await db.orm.public.Question.all();
-    const pointsByUuid = new Map(questions.map((q) => [q.uuid, q.points]));
+    const pointsByUuid = new Map(
+      totalQuestions.map((link) => [link.questionUuid, link.question.points]),
+    );
 
     const score = givenAnswers
       .filter((a) => a.isCorrect)
@@ -313,13 +335,14 @@ export class ExamSessionsService {
   }
 
   private async handleExpiredQuestions(examSessionUuid: string) {
-    const allLinks = await db.orm.public.ExamSessionQuestion.where({
-      examSessionUuid,
-    }).all();
-
-    const answered = await db.orm.public.UserAnswer.where({
-      examSessionUuid,
-    }).all();
+    const [allLinks, answered] = await Promise.all([
+      db.orm.public.ExamSessionQuestion.where({
+        examSessionUuid,
+      }).all(),
+      db.orm.public.UserAnswer.where({
+        examSessionUuid,
+      }).all(),
+    ]);
 
     const answeredUuids = new Set(answered.map((a) => a.questionUuid));
 
@@ -332,8 +355,11 @@ export class ExamSessionsService {
     const question = await db.orm.public.Question.where({
       uuid: pending.questionUuid,
     }).first();
-    const limit = TIME_LIMITS_SECONDS[question!.level];
-    const elapsedSeconds = (Date.now() - pending.presentedAt!.getTime()) / 1000;
+
+    if (!question) return;
+
+    const limit = TIME_LIMITS_SECONDS[question.level];
+    const elapsedSeconds = (Date.now() - pending.presentedAt.getTime()) / 1000;
 
     if (elapsedSeconds > limit) {
       await db.orm.public.UserAnswer.create({
