@@ -7,6 +7,7 @@ Kompletny backend dla platformy edukacyjnej do nauki i rozwiązywania testów na
 - **Framework:** [NestJS](https://nestjs.com/)
 - **Baza danych:** [PostgreSQL](https://www.postgresql.org/)
 - **ORM:** [Prisma 8](https://www.prisma.io/)
+- **Dokumentacja API:** [Swagger (OpenAPI)](https://swagger.io/)
 - **Autoryzacja:** JWT / Guardy NestJS
 
 ---
@@ -27,7 +28,6 @@ Baza danych została zaprojektowana z myślą o elastyczności i wydajności:
 ## Uruchomienie projektu
 
 ### 1. Wymagania wstępne
-
 
 - Node.js
 - Menadżer pakietów (npm)
